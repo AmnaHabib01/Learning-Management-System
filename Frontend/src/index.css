@@ -1,1 +1,113 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+/* @import 'tw-animate-css'; */
+
+/* remove nonstandard at-rules (editor was flagging them). Keep CSS variables for theming */
+/* @custom-variant removed */
+
+:root {
+  /* Updated color scheme to Rich Blue, Golden Yellow, and White */
+  --background: #FFFFFF;
+  --foreground: #1B3B73;
+  --card: #FFFFFF;
+  --card-foreground: #1B3B73;
+  --popover: #FFFFFF;
+  --popover-foreground: #1B3B73;
+  --primary: #1B3B73;
+  --primary-foreground: #FFFFFF;
+  --secondary: #FDCB2E;
+  --secondary-foreground: #1B3B73;
+  --muted: #F5F7FA;
+  --muted-foreground: #5A6B7F;
+  --accent: #FDCB2E;
+  --accent-foreground: #1B3B73;
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.577 0.245 27.325);
+  --border: #E8EEF5;
+  --input: #F5F7FA;
+  --ring: #1B3B73;
+  --chart-1: #1B3B73;
+  --chart-2: #FDCB2E;
+  --chart-3: #2D5BA3;
+  --chart-4: #F9C547;
+  --chart-5: #4A7BA7;
+  --radius: 0.75rem;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #1B3B73;
+  --sidebar-primary: #1B3B73;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #FDCB2E;
+  --sidebar-accent-foreground: #1B3B73;
+  --sidebar-border: #E8EEF5;
+  --sidebar-ring: #1B3B73;
+}
+
+.dark {
+  --background: #0F1B2E;
+  --foreground: #FFFFFF;
+  --card: #1B3B73;
+  --card-foreground: #FFFFFF;
+  --popover: #1B3B73;
+  --popover-foreground: #FFFFFF;
+  --primary: #4A9FD8;
+  --primary-foreground: #0F1B2E;
+  --secondary: #FDCB2E;
+  --secondary-foreground: #1B3B73;
+  --muted: #2D5BA3;
+  --muted-foreground: #B0C4D4;
+  --accent: #FDCB2E;
+  --accent-foreground: #1B3B73;
+  --destructive: oklch(0.396 0.141 25.723);
+  --destructive-foreground: oklch(0.637 0.237 25.331);
+  --border: #2D5BA3;
+  --input: #1B3B73;
+  --ring: #4A9FD8;
+  --chart-1: #4A9FD8;
+  --chart-2: #FDCB2E;
+  --chart-3: #2D5BA3;
+  --chart-4: #F9C547;
+  --chart-5: #6BA3D8;
+  --sidebar: #1B3B73;
+  --sidebar-foreground: #FFFFFF;
+  --sidebar-primary: #4A9FD8;
+  --sidebar-primary-foreground: #0F1B2E;
+  --sidebar-accent: #FDCB2E;
+  --sidebar-accent-foreground: #1B3B73;
+  --sidebar-border: #2D5BA3;
+  --sidebar-ring: #4A9FD8;
+/* removed @theme inline block (not standard). Variables remain in :root/.dark above */
+
+/* Basic base styles using the CSS variables so editor CSS validation doesn't flag Tailwind-only directives */
+* { box-sizing: border-box; }
+/* Global typography: set a single font family and base font-size for the whole app */
+:root {
+  --app-font: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+}
+
+html, body {
+  font-family: var(--app-font);
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* Custom styles for hero background video/image integration */
+.hero-background {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: scroll;
+}
+
+.navbar-overlay {
+  background: linear-gradient(to bottom, rgba(27, 59, 115, 0.95), rgba(27, 59, 115, 0.85), transparent);
+  backdrop-filter: blur(8px);
+}
+
+}
+
+
+
+
+
