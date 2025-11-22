@@ -1,16 +1,7 @@
-import React, { useState, ChangeEvent } from "react";
-import { Eye, EyeOff } from "lucide-react"; // Install lucide-react if not already
+import React, { useState } from "react";
+import { Eye, EyeOff } from "lucide-react"; // Make sure lucide-react is installed
 
-interface ProfileProps {
-  user: {
-    name: string;
-    email: string;
-    role: string;
-    password: string; // add existing password
-  };
-}
-
-export default function ProfileSection({ user }: ProfileProps) {
+export default function ProfileSection({ user }) {
   const [formData, setFormData] = useState({
     name: user.name,
     password: user.password || "",
@@ -18,14 +9,15 @@ export default function ProfileSection({ user }: ProfileProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Updated Data:", formData);
     setIsEditing(false);
+    alert("Profile updated successfully!");
   };
 
   return (
@@ -48,7 +40,9 @@ export default function ProfileSection({ user }: ProfileProps) {
       <form className="flex flex-col gap-3" onSubmit={handleSubmit}>
         {/* Name */}
         <div>
-          <label className="block text-blue-900 font-medium text-sm mb-1">Full Name</label>
+          <label className="block text-blue-900 font-medium text-sm mb-1">
+            Full Name
+          </label>
           <input
             type="text"
             name="name"
@@ -65,7 +59,9 @@ export default function ProfileSection({ user }: ProfileProps) {
 
         {/* Email */}
         <div>
-          <label className="block text-blue-900 font-medium text-sm mb-1">Email Address</label>
+          <label className="block text-blue-900 font-medium text-sm mb-1">
+            Email Address
+          </label>
           <input
             type="email"
             value={user.email}
@@ -76,7 +72,9 @@ export default function ProfileSection({ user }: ProfileProps) {
 
         {/* Password with show/hide */}
         <div className="relative">
-          <label className="block text-blue-900 font-medium text-sm mb-1">Password</label>
+          <label className="block text-blue-900 font-medium text-sm mb-1">
+            Password
+          </label>
           <input
             type={showPassword ? "text" : "password"}
             name="password"
@@ -102,7 +100,9 @@ export default function ProfileSection({ user }: ProfileProps) {
 
         {/* Role */}
         <div>
-          <label className="block text-blue-900 font-medium text-sm mb-1">Role</label>
+          <label className="block text-blue-900 font-medium text-sm mb-1">
+            Role
+          </label>
           <input
             type="text"
             value={user.role}

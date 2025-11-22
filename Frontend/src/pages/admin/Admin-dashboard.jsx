@@ -1,5 +1,8 @@
 import React, { useState } from "react";
-import ProfileSection from "../Components/ui/ProfileSection"; // adjust path as needed
+import { Outlet } from "react-router-dom";
+import Home from "../admin/Home"
+import Students from "../admin/Students";
+import ProfileSection from "../../Components/ui/ProfileSection"; // adjust path as needed
 import {
     FiUser,
     FiBell,
@@ -12,6 +15,29 @@ import {
     FiSearch,
     FiSettings,
 } from "react-icons/fi";
+
+const renderContent = (activeItem) => {
+    switch (activeItem) {
+        case "Home":
+            return <Home />;
+        case "Students":
+            return <Students />;
+        case "Teachers":
+            return <Teachers />;
+        case "Courses":
+            return <Courses />;
+        case "Analytics":
+            return <Analytics />;
+        case "Notifications":
+            return <Notifications />;
+        case "Settings":
+            return <Settings />;
+        case "Logout":
+            return <div>Logging out...</div>;
+        default:
+            return <Home />;
+    }
+};
 
 export default function AdminDashboard() {
     const mainItems = [
@@ -93,7 +119,9 @@ export default function AdminDashboard() {
                             />
                             <FiSearch className="absolute left-2 top-1/2 -translate-y-1/2 text-blue-900 transition-colors group-focus:text-blue-900" />
                         </div>
-
+                        <button className="fixed bottom-6 right-6 bg-linear-to-r from-blue-900 to-purple-600 text-white px-6 py-4 rounded-full shadow-lg text-lg font-semibold animate-pulse hover:scale-110 transition-transform duration-300 ring-4 ring-blue-300 ring-opacity-30">
+                            Chat AI 💬
+                        </button>
                     </div>
 
                     <div className="flex items-center gap-4">
@@ -111,31 +139,24 @@ export default function AdminDashboard() {
                     </div>
                 </div>
                 {showProfile && (
-  <div className="absolute top-16 right-4 z-50">
-    <ProfileSection
-      user={{
-        name: "John Doe",
-        email: "john.doe@example.com",
-        role: "Admin",
-        profileImage: "", // leave empty to use default
-      }}
-    />
-  </div>
-)}
+                    <div className="absolute top-16 right-4 z-50">
+                        <ProfileSection
+                            user={{
+                                name: "John Doe",
+                                email: "john.doe@example.com",
+                                role: "Admin",
+                                profileImage: "", // leave empty to use default
+                            }}
+                        />
+                    </div>
+                )}
 
 
 
                 {/* INNER CONTENT */}
                 <div className="flex-1 bg-gray-100 p-1 overflow-auto">
                     <div className="h-full rounded-b-md bg-white shadow-lg flex items-center justify-center text-gray-700 font-semibold text-2xl m-0">
-                        {activeItem === "Home" && "Welcome to LMS Admin Dashboard"}
-                        {activeItem === "Students" && "Students Section Content"}
-                        {activeItem === "Teachers" && "Teachers Section Content"}
-                        {activeItem === "Courses" && "Courses Section Content"}
-                        {activeItem === "Analytics" && "Analytics Section Content"}
-                        {activeItem === "Notifications" && "Notifications Section Content"}
-                        {activeItem === "Settings" && "Settings Section Content"}
-                        {activeItem === "Logout" && "Logging Out..."}
+                        {renderContent(activeItem)}
                     </div>
                 </div>
             </div>
