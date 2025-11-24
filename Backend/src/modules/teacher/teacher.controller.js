@@ -205,12 +205,47 @@ const resetTeacherPassword = asyncHandler(async (req, res) => {
     return res.status(201).json(new ApiResponse(201, {}, "Password reset successfully"));
 });
 
+
+// ---------------- Get Single Teacher ----------------
+const getTeacherById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const teacher = await Teacher.findById(id).select("-password -teacherRefreshToken");
+  if (!teacher) throw new ApiError(404, "Teacher not found");
+  return res.status(200).json(new ApiResponse(200, teacher, "Teacher fetched successfully"));
+});
+
+// ---------------- Update Teacher ----------------
+const updateTeacher = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { name, email, phoneNumber, address } = req.body;
+
+  const teacher = await Teacher.findById(id);
+  if (!teacher) throw new ApiError(404, "Teacher not found");
+
+  if (req.file) {
+    const uploadResult = await S3UploadHelper.uploadFile(req.file, "teacher-profiles");
+    teacher.profileImage = uploadResult.key;
+  }
+
+  if (name) teacher.name = name;
+  if (email) teacher.email = email;
+  if (phoneNumber) teacher.phoneNumber = phoneNumber;
+  if (address) teacher.address = address;
+
+  await teacher.save();
+  return res.status(200).json(new ApiResponse(200, teacher, "Teacher updated successfully"));
+});
+
+
+
 export {
-    registerTeacher,
-    logInTeacher,
-    logoutTeacher,
-    verifyTeacherMail,
-    getTeacherAccessToken,
-    forgotTeacherPasswordMail,
-    resetTeacherPassword
+  registerTeacher,
+  logInTeacher,
+  logoutTeacher,
+  verifyTeacherMail,
+  getTeacherAccessToken,
+  forgotTeacherPasswordMail,
+  resetTeacherPassword,
+  getTeacherById,
+  updateTeacher
 };

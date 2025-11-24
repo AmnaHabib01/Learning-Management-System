@@ -2,7 +2,6 @@ import express from "express";
 import { validate } from "../../core/middleware/validate.js";
 import { upload } from "../../core/middleware/multer.js";
 import {
-
   registerTeacherSchema,
   loginTeacherSchema,
   resetTeacherPasswordSchema,
@@ -16,7 +15,8 @@ import {
   getTeacherAccessToken,
   forgotTeacherPasswordMail,
   resetTeacherPassword,
-} from "./teacher.controller.js";
+  getTeacherById,
+  updateTeacher} from "./teacher.controller.js";
 import { isLoggedIn } from "../../core/middleware/isLoggedIn.js";
 
 const teacherRouter = express.Router();
@@ -49,6 +49,17 @@ teacherRouter.post(
   "/reset-password/:token",
   validate(resetTeacherPasswordSchema),
   resetTeacherPassword
+);
+// 📄 Get Single Teacher by ID
+teacherRouter.get("/:id", isLoggedIn, getTeacherById);
+
+// ✏️ Update Teacher (with optional profile image upload)
+teacherRouter.put(
+  "/:id",
+  isLoggedIn,
+  upload.single("profileImage"),
+  validate(updateTeacherSchema),
+  updateTeacher
 );
 
 

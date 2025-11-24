@@ -3,7 +3,8 @@ import dotenv from "dotenv"
 import cors from "cors"
 import { errorHandler } from "./src/core/middleware/errorHandler.js";
 import cookieParser from "cookie-parser";
-import teacherRouter from "./src/modules/auth/teacher.route.js";
+import teacherRouter from "./src/modules/teacher/teacher.route.js";
+import adminRouter from "./src/modules/admin/admin.route.js";
 
 const app = express()
 
@@ -23,6 +24,7 @@ app.use(cookieParser());
 
 
 app.use("/api/v1/teacher", teacherRouter)
+app.use("/api/v1/admin", adminRouter)
 
 app.get('/health', (req, res) => {
     res.status(200).json({
