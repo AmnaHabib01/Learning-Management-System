@@ -1,0 +1,217 @@
+import { asyncHandler } from "../../core/utils/async-handler.js";
+import S3UploadHelper from "../../shared/helpers/s3Upload.helper.js";
+import Student from "../../models/Student.model.js";
+import { ApiError } from "../../core/utils/api-error.js";
+import { ApiResponse } from "../../core/utils/api-response.js";
+import { userForgotPasswordMailBody, userVerificationMailBody } from "../../shared/constant/mail.constant.js";
+import { mailTransporter } from "../../shared/helpers/mail.helper.js";
+import { storeAccessToken, storeLoginCookies } from "../../shared/helpers/cookies.helper.js";
+
+// --- Register Student ---
+const registerStudent = asyncHandler(async (req, res) => {
+    const { studentName, studentEmail, studentPassword, studentPhoneNumber, studentAddress } = req.body;
+
+    const existingStudent = await Student.findOne({ studentEmail });
+    if (existingStudent) throw new ApiError(400, "Student already exists");
+
+    let profileImageKey = null;
+    let signedUrl = null;
+
+    if (req.file) {
+        try {
+            const uploadResult = await S3UploadHelper.uploadFile(req.file, "student-profiles");
+            if (uploadResult?.key) {
+                profileImageKey = uploadResult.key;
+                signedUrl = await S3UploadHelper.getSignedUrl(uploadResult.key);
+            }
+        } catch (error) {
+            console.error("S3 Upload Error:", error);
+            throw new ApiError(500, "Profile image upload failed");
+        }
+    }
+
+    const student = await Student.create({
+        studentName,
+        studentEmail,
+        studentPassword,
+        studentPhoneNumber,
+        studentAddress,
+        ...(profileImageKey && { studentProfileImage: profileImageKey }),
+    });
+
+    if (!student) throw new ApiError(400, "Student not created");
+
+    // Generate email verification token
+    const { hashedToken, tokenExpiry } = student.generateTemporaryToken();
+    student.studentVerificationToken = hashedToken;
+    student.studentVerificationTokenExpiry = tokenExpiry;
+    await student.save();
+
+    const verificationLink = `${process.env.BASE_URL}/api/v1/auth/verify/${hashedToken}`;
+    await mailTransporter.sendMail({
+        from: process.env.MAILTRAP_SENDEREMAIL,
+        to: studentEmail,
+        subject: "Verify your email",
+        html: userVerificationMailBody(studentName, verificationLink),
+    });
+
+    const response = {
+        studentId: student._id,
+        studentName: student.studentName,
+        studentEmail: student.studentEmail,
+        studentPhoneNumber: student.studentPhoneNumber,
+        studentAddress: student.studentAddress,
+        ...(signedUrl && { studentProfileImageUrl: signedUrl }),
+    };
+
+    return res.status(201).json(new ApiResponse(201, response, "Student created successfully"));
+});
+
+// --- Login Student ---
+const loginStudent = asyncHandler(async (req, res) => {
+    const { studentEmail, studentPassword } = req.body;
+
+    const student = await Student.findOne({ studentEmail });
+    if (!student) throw new ApiError(400, "Student not found");
+
+    const isPasswordCorrect = await student.isPasswordCorrect(studentPassword);
+    if (!isPasswordCorrect) throw new ApiError(400, "Invalid password");
+
+    if (!student.studentIsVerified) throw new ApiError(400, "Student not verified");
+
+    const accessToken = student.generateAccessToken();
+    const refreshToken = student.generateRefreshToken();
+
+    // Role-based cookies
+    storeLoginCookies(res, accessToken, refreshToken, "student");
+
+    student.studentRefreshToken = refreshToken;
+    await student.save();
+
+    let signedProfileImageUrl = null;
+    if (student.studentProfileImage) {
+        try {
+            signedProfileImageUrl = await S3UploadHelper.getSignedUrl(student.studentProfileImage);
+        } catch (err) {
+            console.error("Error generating signed URL:", err);
+        }
+    }
+
+    const response = {
+        student: {
+            studentId: student._id,
+            studentName: student.studentName,
+            studentEmail: student.studentEmail,
+            studentPhoneNumber: student.studentPhoneNumber,
+            studentAddress: student.studentAddress,
+            studentProfileImage: signedProfileImageUrl || null,
+        },
+        tokens: { accessToken, refreshToken },
+    };
+
+    return res.status(200).json(new ApiResponse(200, response, "Student logged in successfully"));
+});
+
+// --- Logout Student ---
+const logoutStudent = asyncHandler(async (req, res) => {
+    const studentId = req.user?._id;
+    if (!studentId) throw new ApiError(401, "Student not authenticated");
+
+    const student = await Student.findById(studentId);
+    if (!student) throw new ApiError(404, "Student not found");
+
+    student.studentRefreshToken = null;
+    await student.save();
+
+    // Clear role-based cookies
+    res.clearCookie("studentAccessToken", { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/" });
+    res.clearCookie("studentRefreshToken", { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/" });
+
+    return res.status(200).json(new ApiResponse(200, {}, "Student logged out successfully"));
+});
+
+//----- Verify Student Email -----
+const verifyStudentEmail = asyncHandler(async (req, res) => {
+    const { token } = req.params;
+    if (!token) throw new ApiError(400, "Token not found");
+
+    const student = await Student.findOne({
+        studentVerificationToken: token,
+        studentVerificationTokenExpiry: { $gt: Date.now() },
+    });
+    if (!student) throw new ApiError(400, "Invalid or expired verification token");
+
+    student.studentIsVerified = true;
+    student.studentVerificationToken = null;
+    student.studentVerificationTokenExpiry = null;
+    await student.save();
+
+    return res.status(200).json(new ApiResponse(200, {}, "Student verified successfully"));
+});
+
+
+// --- Refresh Access Token ---
+const getAccessToken = asyncHandler(async (req, res) => {
+    const { studentRefreshToken } = req.cookies;
+    if (!studentRefreshToken) throw new ApiError(400, "Refresh token not found");
+
+    const student = await Student.findOne({ studentRefreshToken });
+    if (!student) throw new ApiError(400, "Invalid refresh token");
+
+    const accessToken = student.generateAccessToken();
+    storeAccessToken(res, accessToken, "student");
+
+    return res.status(200).json(new ApiResponse(200, { accessToken }, "Access token generated successfully"));
+});
+
+// --- Forgot Password ---
+const forgotPassword = asyncHandler(async (req, res) => {
+    const { studentEmail } = req.body;
+
+    const student = await Student.findOne({ studentEmail });
+    if (!student) throw new ApiError(400, "Student not found");
+
+    const { hashedToken, tokenExpiry } = student.generateTemporaryToken();
+    student.studentPasswordResetToken = hashedToken;
+    student.studentPasswordExpirationDate = tokenExpiry;
+    await student.save();
+
+    const resetLink = `${process.env.BASE_URL}/api/v1/student/reset-password/${hashedToken}`;
+    await mailTransporter.sendMail({
+        from: process.env.MAILTRAP_SENDEREMAIL,
+        to: studentEmail,
+        subject: "Password Reset",
+        html: userForgotPasswordMailBody(student.studentName, resetLink),
+    });
+
+    return res.status(200).json(new ApiResponse(200, { resetLink }, "Password reset link sent successfully"));
+});
+
+// --- Reset Password ---
+const resetPassword = asyncHandler(async (req, res) => {
+    const { token } = req.params;
+    const { studentPassword } = req.body;
+
+    const student = await Student.findOne({
+        studentPasswordResetToken: token,
+        studentPasswordExpirationDate: { $gt: Date.now() },
+    });
+    if (!student) throw new ApiError(400, "Invalid or expired password reset token");
+
+    student.studentPassword = studentPassword;
+    student.studentPasswordResetToken = null;
+    student.studentPasswordExpirationDate = null;
+    await student.save();
+
+    return res.status(200).json(new ApiResponse(200, {}, "Password reset successfully"));
+});
+
+export {
+    registerStudent,
+    loginStudent,
+    logoutStudent,
+    verifyStudentEmail,
+    getAccessToken,
+    forgotPassword,
+    resetPassword
+};
