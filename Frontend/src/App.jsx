@@ -1,11 +1,21 @@
-import React from 'react'
+// App.tsx
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import AdminDashboard from "./pages/admin/Admin-dashboard";
+import RegisterStudent from "./pages/admin/RegisterStudent";
 
 const App = () => {
   return (
-    <div>
-      
-    </div>
-  )
-}
+    <Router>
+      <Routes>
+        {/* Parent Admin Layout */}
+        <Route path="/admin" element={<AdminDashboard />}>
+          {/* Nested route (IMPORTANT: remove / before register-student) */}
 
-export default App
+        </Route>
+      </Routes>
+    </Router>
+  );
+};
+
+export default App;

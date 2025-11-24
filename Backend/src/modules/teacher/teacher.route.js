@@ -1,0 +1,66 @@
+import express from "express";
+import { validate } from "../../core/middleware/validate.js";
+import { upload } from "../../core/middleware/multer.js";
+import {
+  registerTeacherSchema,
+  loginTeacherSchema,
+  resetTeacherPasswordSchema,
+  updateTeacherSchema,
+} from "../../shared/validators/teacher.validator.js"; // teacher validators
+import {
+  registerTeacher,
+  logInTeacher,
+  logoutTeacher,
+  verifyTeacherMail,
+  getTeacherAccessToken,
+  forgotTeacherPasswordMail,
+  resetTeacherPassword,
+  getTeacherById,
+  updateTeacher} from "./teacher.controller.js";
+import { isLoggedIn } from "../../core/middleware/isLoggedIn.js";
+
+const teacherRouter = express.Router();
+
+// ✅ Register Teacher (with optional profile image upload to AWS S3)
+teacherRouter.post(
+  "/register-teacher",
+  upload.single("profileImage"),
+  validate(registerTeacherSchema),
+  registerTeacher
+);
+
+// 🔐 Login Teacher
+teacherRouter.post("/login-teacher", validate(loginTeacherSchema), logInTeacher);
+
+// 🚪 Logout Teacher
+teacherRouter.post("/logout-teacher", isLoggedIn, logoutTeacher);
+
+// ✉️ Verify Teacher Email
+teacherRouter.get("/verify/:token", verifyTeacherMail);
+
+// 🔁 Get Access Token
+teacherRouter.get("/get-access-token", getTeacherAccessToken);
+
+// 🔑 Forgot Password
+teacherRouter.post("/forgot-password-mail", forgotTeacherPasswordMail);
+
+// 🔒 Reset Password
+teacherRouter.post(
+  "/reset-password/:token",
+  validate(resetTeacherPasswordSchema),
+  resetTeacherPassword
+);
+// 📄 Get Single Teacher by ID
+teacherRouter.get("/:id", isLoggedIn, getTeacherById);
+
+// ✏️ Update Teacher (with optional profile image upload)
+teacherRouter.put(
+  "/:id",
+  isLoggedIn,
+  upload.single("profileImage"),
+  validate(updateTeacherSchema),
+  updateTeacher
+);
+
+
+export default teacherRouter;
