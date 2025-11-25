@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-// Password rules
+// Password rules (same as teacher)
 const passwordRules = z
   .string()
   .min(8, "Password must be at least 8 characters long")
@@ -33,7 +33,7 @@ const resetStudentPasswordSchema = z.object({
   studentPassword: passwordRules,
 });
 
-// Update Student info schema
+//Update Student info schema
 const updateStudentSchema = z.object({
   studentName: z.string().min(2, "Name must be at least 2 characters long").optional(),
   studentEmail: z.string().email("Invalid email").optional(),
