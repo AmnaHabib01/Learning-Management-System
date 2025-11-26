@@ -23,9 +23,9 @@ courseRouter.get("/all", getAllCourses);
 courseRouter.get("/:id", getCourseById);
 
 // Update Course
-courseRouter.put("/:id", validate(updateCourseSchema), updateCourse);
+courseRouter.put("/update/:id", validate(updateCourseSchema), updateCourse);
 
 // Delete Course
-courseRouter.delete("/:id", deleteCourse);
+courseRouter.delete("/delete/:id", deleteCourse);
 
 export default courseRouter;

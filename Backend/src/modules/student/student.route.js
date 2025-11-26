@@ -9,10 +9,9 @@ import {
   deleteStudentProfileImage,
 } from "../../modules/student/student.controller.js";
 
-const router = express.Router();
-router.get("/:studentId", getStudentProfile);
-router.put("/update/:studentId", upload.single("studentProfileImage"), updateStudent);
-router.put("/:studentId/profile-image", upload.single("studentProfileImage"), updateStudentProfileImage);
-router.delete("/:studentId/profile-image", deleteStudentProfileImage);
-
-export default router;
+const studentrouter = express.Router();
+studentrouter.get("/:studentId", getStudentProfile);
+studentrouter.put("/update/:studentId", upload.single("studentProfileImage"), updateStudent);
+studentrouter.put("/:studentId/profile-image", upload.single("studentProfileImage"), updateStudentProfileImage);
+studentrouter.delete("/:studentId/profile-image", deleteStudentProfileImage);
+export default studentrouter;

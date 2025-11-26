@@ -47,8 +47,8 @@ export default function Navbar() {
             <a href="/login" className="text-blue-900 px-3 py-2 rounded-lg hover:bg-blue-900/10 transition-colors duration-300 border border-blue-900/20 flex items-center justify-center">
               <User size={20} />
             </a>
-            <a href="/register" className="bg-yellow-400 text-blue-900 px-5 py-2 rounded-lg hover:bg-yellow-300 text-sm font-semibold transition-all duration-300 shadow-md hover:shadow-lg">
-              Get Started
+            <a href="/login" className="bg-yellow-400 text-blue-900 px-5 py-2 rounded-lg hover:bg-yellow-300 text-sm font-semibold transition-all duration-300 shadow-md hover:shadow-lg">
+            Login
             </a>
           </div>
 
