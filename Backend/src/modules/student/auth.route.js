@@ -2,7 +2,7 @@ import Router from "express";
 import { upload } from "../../core/middleware/multer.js";
 import { validate } from "../../core/middleware/validate.js";
 import {   registerStudentSchema,loginStudentSchema,resetStudentPasswordSchema } from "../../shared/validators/student.validator.js";
-import { registerStudent, loginStudent, logoutStudent, verifyStudentEmail, getAccessToken, forgotPassword, resetPassword } from "./studentAuth.controller.js";
+import { registerStudent, loginStudent, logoutStudent, verifyStudentEmail, getAccessToken, forgotPassword, resetPassword } from "./auth.controller.js";
 import { isLoggedIn } from "../../core/middleware/isLoggedIn.js";
 
 const studentAuthRouter = Router();

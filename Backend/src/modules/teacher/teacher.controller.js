@@ -1,12 +1,13 @@
 import { asyncHandler } from "../../core/utils/async-handler.js";
-import Teacher from "../../models/Teacher.model.js";
+import S3UploadHelper from "../../shared/helpers/s3Upload.js";
 import { ApiError } from "../../core/utils/api-error.js";
 import { ApiResponse } from "../../core/utils/api-response.js";
-import { userForgotPasswordMailBody, userVerificationMailBody } from "../../shared/constants/mail.constant.js";
 import { mailTransporter } from "../../shared/helpers/mail.helper.js";
+import { userForgotPasswordMailBody, userVerificationMailBody } from "../../shared/constants/mail.constant.js";
 import { storeAccessToken, storeLoginCookies } from "../../shared/helpers/cookies.helper.js";
+import Teacher from "../../models/Teacher.model.js";
+
 import crypto from "crypto";
-import S3UploadHelper from "../../shared/helpers/s3Upload.js";
 
 // ---------------- Register Teacher ----------------
 const registerTeacher = asyncHandler(async (req, res) => {
@@ -172,7 +173,8 @@ const forgotTeacherPasswordMail = asyncHandler(async (req, res) => {
     teacher.teacherPasswordExpirationDate = tokenExpiry;
     await teacher.save();
 
-    const resetLink = `${process.env.BASE_URL}/api/v1/teacher/reset-password/${unHashedToken}`;
+    // const resetLink = `${process.env.BASE_URL}/api/v1/teacher/reset-password/${unHashedToken}`;
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password/teacher/${unHashedToken}`;
     await mailTransporter.sendMail({
         from: process.env.MAILTRAP_SENDEREMAIL,
         to: email,

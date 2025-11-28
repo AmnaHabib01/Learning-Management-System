@@ -8,15 +8,20 @@ import { ApiResponse } from "../../core/utils/api-response.js";
 
 // ---------------- Create Quiz ----------------
 export const createQuiz = asyncHandler(async (req, res) => {
-  const { title, questions, course, createdBy } = req.body;
+  const { title, questions, course } = req.body;
 
+  // Check if course exists
   const courseExists = await Course.findById(course);
   if (!courseExists) throw new ApiError(404, "Course not found");
 
-  const teacherExists = await Teacher.findById(createdBy);
+  // Get the logged-in teacher's ID from req.user
+  const teacherId = req.user._id;
+
+  const teacherExists = await Teacher.findById(teacherId);
   if (!teacherExists) throw new ApiError(404, "Teacher not found");
 
-  const quiz = await Quiz.create({ title, questions, course, createdBy });
+  // Create quiz
+  const quiz = await Quiz.create({ title, questions, course, createdBy: teacherId });
 
   return res
     .status(201)

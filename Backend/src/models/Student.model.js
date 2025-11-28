@@ -1,148 +1,67 @@
 import mongoose from "mongoose";
-import bcrypt from "bcryptjs";    //hash and verify(password--salt),npm package,bcrypt hashing algorithm only
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import crypto from "crypto";       //hashing,encription(for tokens),node.js module,many algorithms
-
-const quizTakenSchema = new mongoose.Schema({
-  quizId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Quiz",
-    required: true,
-  },
-  score: {
-    type: Number,
-    default: 0,
-  },
-  completedAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
-
-const assignmentSchema = new mongoose.Schema({
-  assignmentId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Assignment",
-  },
-  fileUrl: String,
-  grade: Number,
-  submittedAt: Date,
-});
+import crypto from "crypto";
 
 const studentSchema = new mongoose.Schema(
   {
-    studentName: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    studentEmail: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-    },
-
-    studentPassword: {
-      type: String,
-      required: true,
-      minlength: 6,
-    },
-
-    studentProfileImage: {
-      type: String, // URL
-      default: "",
-    },
-
-    studentPhoneNumber: {
-      type: String,
-      default: "",
-    },
-
-    studentAddress: {
-      type: String,
-      default: "",
-    },
-    studentIsVerified: {
-    type: Boolean,
-    default: false,
-  },
-  studentPasswordResetToken: {
-    type: String,
-  },
-  studentPasswordExpirationDate: {
-    type: Date,
-  },
-  studentVerificationToken: {
-    type: String,
-    default: null,
-  },
-  studentVerificationTokenExpiry: {
-    type: Date,
-},
-  studentRefreshToken: {
-    type: String,
-  },
-
-    courses: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Course",
-      },
-    ],
-
-    quizzesTaken: [quizTakenSchema],
-
-    assignments: [assignmentSchema],
+    name: { type: String, required: true, trim: true },
+    email: { type: String, required: true, unique: true, lowercase: true },
+    password: { type: String, required: true, minlength: 6 },
+    profileImage: { type: String, default: "" },
+    role: { type: String, default: "Student", immutable: true },
+    phoneNumber: { type: String, default: "" },
+    address: { type: String, default: "" },
+    studentIsVerified: { type: Boolean, default: false },
+    studentPasswordResetToken: String,
+    studentPasswordExpirationDate: Date,
+    studentVerificationToken: { type: String, default: null },
+    studentVerificationTokenExpiry: Date,
+    studentRefreshToken: String,
+    courses: [{ type: mongoose.Schema.Types.ObjectId, ref: "Course" }],
+    quizzes: [{ type: mongoose.Schema.Types.ObjectId, ref: "Quiz" }],
+    assignments: [{ type: mongoose.Schema.Types.ObjectId, ref: "Assignment" }],
   },
   { timestamps: true }
 );
+
+// Hash password before saving
 studentSchema.pre("save", async function (next) {
-    if (!this.isModified("studentPassword")) return next();
-    this.studentPassword = await bcrypt.hash(this.studentPassword, 10);
-    next();
+  if (!this.isModified("password")) return next();
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
 });
-//compare hashed password with plain
-studentSchema.methods.isPasswordCorrect = async function (studentPassword) {
-    return await bcrypt.compare(studentPassword, this.studentPassword);
+
+// Compare hashed password
+studentSchema.methods.isPasswordCorrect = async function (plainPassword) {
+  return bcrypt.compare(plainPassword, this.password);
 };
-//generate short lived token (JWT)
+
+// Generate access token (JWT)
 studentSchema.methods.generateAccessToken = function () {
-    return jwt.sign(
-        {
-            _id: this._id,
-            studentEmail: this.studentEmail,
-            studentName: this.studentName
-        },
-        process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: process.env.ACCESS_TOKEN_EXPIRY },
-    );
+  return jwt.sign(
+    { _id: this._id, email: this.email, name: this.name, role: "student" },
+    process.env.ACCESS_TOKEN_SECRET,
+    { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
+  );
 };
-//generate long lived token (jwt)
+
+// Generate refresh token
 studentSchema.methods.generateRefreshToken = function () {
-    return jwt.sign(
-        {
-            _id: this._id,
-        },
-        process.env.REFRESH_TOKEN_SECRET,
-        { expiresIn: process.env.REFRESH_TOKEN_EXPIRY },
-    );
+  return jwt.sign(
+    { _id: this._id },
+    process.env.REFRESH_TOKEN_SECRET,
+    { expiresIn: process.env.REFRESH_TOKEN_EXPIRY }
+  );
 };
-//token for email and sms verification
+
+// Generate temporary token for email verification or password reset
 studentSchema.methods.generateTemporaryToken = function () {
-
-    const unHashedToken = crypto.randomBytes(20).toString("hex");
-
-    const hashedToken = crypto
-        .createHash("sha256")
-        .update(unHashedToken)
-        .digest("hex");
-    const tokenExpiry = Date.now() + 10 * 60 * 1000;                                                         // 20 minutes;
-
-    return { unHashedToken, hashedToken, tokenExpiry };
+  const unHashedToken = crypto.randomBytes(20).toString("hex");
+  const hashedToken = crypto.createHash("sha256").update(unHashedToken).digest("hex");
+  const tokenExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes
+  return { unHashedToken, hashedToken, tokenExpiry };
 };
 
-const Student = mongoose.model("Student", studentSchema)
-
+const Student = mongoose.model("Student", studentSchema);
 export default Student;
