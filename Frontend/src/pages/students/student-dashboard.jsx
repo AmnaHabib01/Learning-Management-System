@@ -42,10 +42,9 @@ const renderContent = (activeItem) => {
 export default function StudentDashboard() {
     const mainItems = [
         { name: "Home", icon: <FiHome /> },
-        { name: "Students", icon: <FiUsers /> },
-        { name: "Teachers", icon: <FiUser /> },
-        { name: "Courses", icon: <FiBookOpen /> },
-        { name: "Analytics", icon: <FiBarChart2 /> },
+        { name: "Course", icon: <FiUsers /> },
+        { name: "Assignments", icon: <FiUser /> },
+        { name: "Quizez", icon: <FiBookOpen /> },
         { name: "Notifications", icon: <FiBell /> },
         { name: "Settings", icon: <FiSettings /> },
         { name: "Logout", icon: <FiLogOut /> },

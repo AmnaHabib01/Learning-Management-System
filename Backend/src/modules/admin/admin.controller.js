@@ -167,7 +167,10 @@ const forgotAdminPasswordMail = asyncHandler(async (req, res) => {
     admin.adminPasswordExpirationDate = tokenExpiry;
     await admin.save();
 
-    const resetLink = `${process.env.BASE_URL}/api/v1/admin/reset-password/${unHashedToken}`;
+    // const resetLink = `${process.env.BASE_URL}/api/v1/admin/reset-password/${unHashedToken}`;
+    // For admin
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password/admin/${unHashedToken}`;
+
     await mailTransporter.sendMail({
         from: process.env.MAILTRAP_SENDEREMAIL,
         to: email,
@@ -245,21 +248,21 @@ const deleteAdmin = asyncHandler(async (req, res) => {
 });
 //---------------- Get All Teachers ----------------
 const getAllTeachers = asyncHandler(async (req, res) => {
-    if(req.userRole !== 'admin') {
-      throw new ApiError(403, "Forbidden: Only admins can access all teachers");
+    if (req.userRole !== 'admin') {
+        throw new ApiError(403, "Forbidden: Only admins can access all teachers");
     }
-  const teachers = await Teacher.find().select("-password -teacherRefreshToken");
-  return res.status(200).json(new ApiResponse(200, teachers, "All teachers fetched successfully"));
+    const teachers = await Teacher.find().select("-password -teacherRefreshToken");
+    return res.status(200).json(new ApiResponse(200, teachers, "All teachers fetched successfully"));
 });
 // ---------------- Delete Teacher ----------------
 const deleteTeacher = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  if(req.userRole !== 'admin') {
-    throw new ApiError(403, "Forbidden: Only admins can delete teachers");
-  }
-  const teacher = await Teacher.findByIdAndDelete(id);
-  if (!teacher) throw new ApiError(404, "Teacher not found");
-  return res.status(200).json(new ApiResponse(200, {}, "Teacher deleted successfully"));
+    const { id } = req.params;
+    if (req.userRole !== 'admin') {
+        throw new ApiError(403, "Forbidden: Only admins can delete teachers");
+    }
+    const teacher = await Teacher.findByIdAndDelete(id);
+    if (!teacher) throw new ApiError(404, "Teacher not found");
+    return res.status(200).json(new ApiResponse(200, {}, "Teacher deleted successfully"));
 });
 
 export {

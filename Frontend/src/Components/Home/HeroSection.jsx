@@ -41,7 +41,7 @@ export default function HeroSection() {
                 href="/login" // redirect to your login page
                 className="flex items-center justify-center bg-yellow-400 text-blue-900 hover:bg-yellow-300 px-6 py-3 rounded-lg text-base font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
               >
-                Login LMS Dashboards
+               Start Learning
                 <ArrowRight className="w-5 h-5 ml-2" />
               </a>
 

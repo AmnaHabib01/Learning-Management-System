@@ -173,7 +173,8 @@ const forgotTeacherPasswordMail = asyncHandler(async (req, res) => {
     teacher.teacherPasswordExpirationDate = tokenExpiry;
     await teacher.save();
 
-    const resetLink = `${process.env.BASE_URL}/api/v1/teacher/reset-password/${unHashedToken}`;
+    // const resetLink = `${process.env.BASE_URL}/api/v1/teacher/reset-password/${unHashedToken}`;
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password/teacher/${unHashedToken}`;
     await mailTransporter.sendMail({
         from: process.env.MAILTRAP_SENDEREMAIL,
         to: email,

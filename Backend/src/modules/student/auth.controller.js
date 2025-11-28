@@ -11,7 +11,7 @@ import crypto from "crypto";
 // --- Register Student ---
 const registerStudent = asyncHandler(async (req, res) => {
   const { name, email, password, phoneNumber, address } = req.body;
-
+ if (!email) throw new ApiError(400, "Email is required");
   const existingStudent = await Student.findOne({ email });
   if (existingStudent) throw new ApiError(400, "Student already exists");
 
@@ -174,7 +174,8 @@ const forgotPassword = asyncHandler(async (req, res) => {
   student.studentPasswordExpirationDate = tokenExpiry;
   await student.save();
 
-  const resetLink = `${process.env.BASE_URL}/api/v1/student/reset-password/${hashedToken}`;
+  // const resetLink = `${process.env.BASE_URL}/api/v1/student/reset-password/${hashedToken}`;
+   const resetLink = `${process.env.FRONTEND_URL}/reset-password/student/${hashedToken}`;
   await mailTransporter.sendMail({
     from: process.env.MAILTRAP_SENDEREMAIL,
     to: email,

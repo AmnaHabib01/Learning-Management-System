@@ -6,6 +6,7 @@ import Home from "./pages/home/Landingpage";
 import LoginPage from "./Components/Home/Login";
 import StudentDashboard from "./pages/students/student-dashboard";
 import TeacherDashboard from "./pages/teacher/teacher-dashboard";
+import ResetPasswordPage from "./Components/Home/resetpassword";
 
 const App = () => {
   return (
@@ -21,9 +22,11 @@ const App = () => {
         {/* Teacher & Student dashboards (top-level) */}
         <Route path="/student/dashboard" element={<StudentDashboard />} />
         <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
+        <Route path="/reset-password/:role/:token" element={<ResetPasswordPage />} />
       </Routes>
     </Router>
   );
 };
 
 export default App;
+
