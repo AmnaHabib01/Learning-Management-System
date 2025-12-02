@@ -8,6 +8,7 @@ import { storeAccessToken, storeLoginCookies } from "../../shared/helpers/cookie
 import crypto from "crypto";
 import S3UploadHelper from "../../shared/helpers/s3Upload.js";
 import Teacher from "../../models/Teacher.model.js";
+import { log } from "console";
 // ---------------- Register Admin ----------------
 const registerAdmin = asyncHandler(async (req, res) => {
     const { name, email, password } = req.body;
@@ -73,7 +74,7 @@ const logInAdmin = asyncHandler(async (req, res) => {
     const accessToken = admin.generateAccessToken();
     const refreshToken = admin.generateRefreshToken();
 
-    storeLoginCookies(res, accessToken, refreshToken, "admin");
+    storeLoginCookies(res, accessToken, refreshToken, "Admin");
 
     admin.adminRefreshToken = refreshToken;
     await admin.save();
@@ -143,6 +144,8 @@ const verifyAdminMail = asyncHandler(async (req, res) => {
 // ---------------- Get Admin Access Token ----------------
 const getAdminAccessToken = asyncHandler(async (req, res) => {
     const { adminRefreshToken } = req.cookies;
+    console.log(adminRefreshToken);
+    
     if (!adminRefreshToken) throw new ApiError(400, "Refresh token not found");
 
     const admin = await Admin.findOne({ adminRefreshToken });
@@ -150,6 +153,8 @@ const getAdminAccessToken = asyncHandler(async (req, res) => {
 
     const accessToken = admin.generateAccessToken();
     await storeAccessToken(res, accessToken, "admin");
+    console.log(storeAccessToken);
+    
 
     return res.status(201).json(new ApiResponse(201, { accessToken }, "Admin access token generated successfully"));
 });

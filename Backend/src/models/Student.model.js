@@ -9,7 +9,7 @@ const studentSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true, lowercase: true },
     password: { type: String, required: true, minlength: 6 },
     profileImage: { type: String, default: "" },
-    role: { type: String, default: "Student", immutable: true },
+    role: { type: String, default: "student", immutable: true },
     phoneNumber: { type: String, default: "" },
     address: { type: String, default: "" },
     studentIsVerified: { type: Boolean, default: false },

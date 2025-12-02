@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
 import Home from "../admin/Home"
 import Students from "../admin/Students";
+import Teacher from "./Teacher";
 import ProfileSection from "../../Components/ui/ProfileSection"; // adjust path as needed
 import {
     FiUser,
@@ -23,7 +24,7 @@ const renderContent = (activeItem) => {
         case "Students":
             return <Students />;
         case "Teachers":
-            return <Teachers />;
+            return <Teacher />;
         case "Courses":
             return <Courses />;
         case "Analytics":
@@ -151,14 +152,13 @@ export default function AdminDashboard() {
                     </div>
                 )}
 
-
-
                 {/* INNER CONTENT */}
-                <div className="flex-1 bg-gray-100 p-1 overflow-auto">
-                    <div className="h-full rounded-b-md bg-white shadow-lg flex items-center justify-center text-gray-700 font-semibold text-2xl m-0">
+                <div className="flex-1 bg-gray-100 overflow-auto ">
+                    <div className="bg-white rounded-md shadow-lg  min-h-full">
                         {renderContent(activeItem)}
                     </div>
                 </div>
+
             </div>
         </div>
     );

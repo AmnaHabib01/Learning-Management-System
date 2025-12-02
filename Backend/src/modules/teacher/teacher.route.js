@@ -18,12 +18,15 @@ import {
   getTeacherById,
   updateTeacher} from "./teacher.controller.js";
 import { isLoggedIn } from "../../core/middleware/isLoggedIn.js";
+import {authorizeRoles} from "../../core/middleware/authorizeRoles.js"
 
 const teacherRouter = express.Router();
 
 // ✅ Register Teacher (with optional profile image upload to AWS S3)
 teacherRouter.post(
   "/register-teacher",
+  isLoggedIn,
+  authorizeRoles("admin"),
   upload.single("profileImage"),
   validate(registerTeacherSchema),
   registerTeacher
@@ -39,7 +42,7 @@ teacherRouter.post("/logout-teacher", isLoggedIn, logoutTeacher);
 teacherRouter.get("/verify/:token", verifyTeacherMail);
 
 // 🔁 Get Access Token
-teacherRouter.get("/get-access-token", getTeacherAccessToken);
+teacherRouter.get("/access-token",isLoggedIn, getTeacherAccessToken);
 
 // 🔑 Forgot Password
 teacherRouter.post("/forgot-password-mail", forgotTeacherPasswordMail);

@@ -37,8 +37,10 @@ const LoginPage = () => {
 
         try {
             const res = await api.post(endpointMap[role], { email, password });
-            const { user, token } = res.data;
-            setUser(user, token, role);
+            const { user, accessToken,
+                refreshToken } = res.data;
+            setUser(user, accessToken,
+                refreshToken, role);
             navigate(`/${role}/dashboard`);
         } catch (err) {
             setError(err.response?.data?.message || "Login failed. Please try again.");
@@ -134,9 +136,9 @@ const LoginPage = () => {
                         <div className="flex items-center space-x-4 mb-6">
                             <div className="p-3 bg-yellow-500 rounded-full shadow-lg">
                                 {role === 'student' ? <GraduationCap size={32} className="text-blue-950" /> :
-                                 role === 'teacher' ? <UserCheck size={32} className="text-blue-950" /> :
-                                 role === 'admin' ? <Shield size={32} className="text-blue-950" /> :
-                                 <Briefcase size={32} className="text-blue-950" />}
+                                    role === 'teacher' ? <UserCheck size={32} className="text-blue-950" /> :
+                                        role === 'admin' ? <Shield size={32} className="text-blue-950" /> :
+                                            <Briefcase size={32} className="text-blue-950" />}
                             </div>
                             <span className="text-2xl font-extrabold capitalize text-yellow-500">{role} Access</span>
                         </div>
@@ -195,7 +197,7 @@ const LoginPage = () => {
                             </button>
 
                             <p className="text-center text-xs text-gray-500 pt-2 cursor-pointer hover:text-yellow-500"
-                               onClick={() => setForgotMode(false)}>
+                                onClick={() => setForgotMode(false)}>
                                 Back to Login
                             </p>
                         </div>
@@ -258,9 +260,9 @@ const LoginPage = () => {
                                 disabled={loading}
                                 className={`w-full py-4 mt-8 font-extrabold rounded-xl text-blue-950 text-lg transition-all duration-300 shadow-xl tracking-wider uppercase
                                   ${loading
-                                      ? "bg-yellow-400/80 cursor-not-allowed"
-                                      : "bg-yellow-500 hover:bg-blue-950 hover:text-white transform hover:scale-[1.01]"
-                                  }`}
+                                        ? "bg-yellow-400/80 cursor-not-allowed"
+                                        : "bg-yellow-500 hover:bg-blue-950 hover:text-white transform hover:scale-[1.01]"
+                                    }`}
                             >
                                 {loading ? (
                                     <span className="flex items-center justify-center">
@@ -283,4 +285,3 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
-
