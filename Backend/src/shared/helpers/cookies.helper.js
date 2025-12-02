@@ -21,7 +21,7 @@ const storeLoginCookies =  (res, accessToken, refreshToken, role='teacher') => {
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
         path: "/",
-        maxAge: 15 * 60 * 1000, // 15 minutes
+        maxAge: 30 * 60 * 1000, // 30 minutes
     });
 
     res.cookie(refreshTokenName, refreshToken, {
@@ -42,7 +42,7 @@ const storeAccessToken = asyncHandler(async (res, accessToken, role = "user") =>
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
         path: "/",
-        maxAge: 15 * 60 * 1000, // 15 minutes
+        maxAge: 30 * 60 * 1000, // 30 minutes
     });
 });
 

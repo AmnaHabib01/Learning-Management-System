@@ -149,7 +149,7 @@ const verifyStudentEmail = asyncHandler(async (req, res) => {
 });
 
 // --- Refresh Access Token ---
-const getAccessToken = asyncHandler(async (req, res) => {
+const getStudentAccessToken = asyncHandler(async (req, res) => {
   const { studentRefreshToken } = req.cookies;
   if (!studentRefreshToken) throw new ApiError(400, "Refresh token not found");
 
@@ -210,7 +210,7 @@ export {
   loginStudent,
   logoutStudent,
   verifyStudentEmail,
-  getAccessToken,
+  getStudentAccessToken,
   forgotPassword,
   resetPassword
 };

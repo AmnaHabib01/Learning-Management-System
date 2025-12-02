@@ -6,6 +6,7 @@ import {
   loginAdminSchema,
   resetAdminPasswordSchema,
   updateAdminSchema,
+  
 } from "../../shared/validators/admin.validator.js"; // admin validators
 import {
   registerAdmin,
@@ -55,7 +56,7 @@ adminRouter.post(
 );
 
 // 👤 Get Admin Profile
-adminRouter.get("/profile", isLoggedIn, getAdminProfile);
+adminRouter.get("/profile", isLoggedIn,getAdminProfile);
 
 // ✏️ Update Admin Profile (with optional profile image)
 adminRouter.put(
@@ -69,5 +70,6 @@ adminRouter.put(
 // 🗑 Delete Admin Profile
 adminRouter.delete("/profile", isLoggedIn, deleteAdmin);
 adminRouter.get("/allteachers", isLoggedIn, getAllTeachers);
+adminRouter.get("/access-token", isLoggedIn, getAdminAccessToken);
 
 export default adminRouter;
