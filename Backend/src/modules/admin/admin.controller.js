@@ -10,6 +10,56 @@ import S3UploadHelper from "../../shared/helpers/s3Upload.js";
 import Teacher from "../../models/Teacher.model.js";
 import { log } from "console";
 // ---------------- Register Admin ----------------
+// const registerAdmin = asyncHandler(async (req, res) => {
+//     const { name, email, password } = req.body;
+
+//     const existingAdmin = await Admin.findOne({ email });
+//     if (existingAdmin) throw new ApiError(400, "Admin already exists");
+
+//     let profileImageKey = null;
+//     if (req.file) {
+//         try {
+//             const uploadResult = await S3UploadHelper.uploadFile(req.file, "admin-profiles");
+//             profileImageKey = uploadResult.key;
+//         } catch (error) {
+//             console.error("S3 Upload Error:", error);
+//             throw new ApiError(500, "Profile image upload failed");
+//         }
+//     }
+
+//     const admin = await Admin.create({
+//         name,
+//         email,
+//         password,
+//         ...(profileImageKey && { profileImage: profileImageKey })
+//     });
+
+//     if (!admin) throw new ApiError(400, "Admin not created");
+
+//     const { unHashedToken, hashedToken, tokenExpiry } = admin.generateTemporaryToken();
+//     admin.adminVerificationToken = hashedToken;
+//     admin.adminVerificationTokenExpiry = tokenExpiry;
+//     await admin.save();
+
+//     const verificationLink = `${process.env.BASE_URL}/api/v1/admin/verify/${unHashedToken}`;
+//     await mailTransporter.sendMail({
+//         from: process.env.MAILTRAP_SENDEREMAIL,
+//         to: email,
+//         subject: "Verify your email",
+//         html: userVerificationMailBody(name, verificationLink)
+//     });
+
+//     const response = {
+//         name: admin.name,
+//         email: admin.email,
+//         role: admin.role,
+//         ...(profileImageKey && { profileImage: profileImageKey })
+//     };
+
+//     return res.status(201).json(new ApiResponse(201, response, "Admin created successfully"));
+// });
+
+// ---------------- Register Admin ----------------
 const registerAdmin = asyncHandler(async (req, res) => {
     const { name, email, password } = req.body;
 
@@ -36,6 +86,7 @@ const registerAdmin = asyncHandler(async (req, res) => {
 
     if (!admin) throw new ApiError(400, "Admin not created");
 
+    // Generate temporary token for email verification
     const { unHashedToken, hashedToken, tokenExpiry } = admin.generateTemporaryToken();
     admin.adminVerificationToken = hashedToken;
     admin.adminVerificationTokenExpiry = tokenExpiry;
@@ -49,11 +100,21 @@ const registerAdmin = asyncHandler(async (req, res) => {
         html: userVerificationMailBody(name, verificationLink)
     });
 
+    // Generate signed URL for profile image
+    let profileImageUrl = null;
+    if (profileImageKey) {
+        try {
+            profileImageUrl = await S3UploadHelper.getSignedUrl(profileImageKey);
+        } catch (err) {
+            console.error("Error generating signed URL for admin profile:", err);
+        }
+    }
+
     const response = {
         name: admin.name,
         email: admin.email,
         role: admin.role,
-        ...(profileImageKey && { profileImage: profileImageKey })
+        ...(profileImageUrl && { profileImageUrl }) // Use signed URL
     };
 
     return res.status(201).json(new ApiResponse(201, response, "Admin created successfully"));
@@ -214,7 +275,19 @@ const getAdminProfile = asyncHandler(async (req, res) => {
     const admin = await Admin.findById(adminId).select("-password -adminRefreshToken");
     if (!admin) throw new ApiError(404, "Admin not found");
 
-    return res.status(200).json(new ApiResponse(200, admin, "Admin profile fetched successfully"));
+    let profileImageUrl = null;
+    if (admin.profileImage) {
+        try {
+            profileImageUrl = await S3UploadHelper.getSignedUrl(admin.profileImage);
+        } catch (err) {
+            console.error("Error generating signed URL for admin:", err);
+        }
+    }
+
+    return res.status(200).json(new ApiResponse(200, { 
+        ...admin.toObject(), 
+        profileImageUrl 
+    }, "Admin profile fetched successfully"));
 });
 
 // ---------------- Update Admin ----------------
@@ -239,7 +312,20 @@ const updateAdminProfile = asyncHandler(async (req, res) => {
     if (email) admin.email = email;
 
     await admin.save();
-    return res.status(200).json(new ApiResponse(200, admin, "Admin profile updated successfully"));
+
+    let profileImageUrl = null;
+    if (admin.profileImage) {
+        try {
+            profileImageUrl = await S3UploadHelper.getSignedUrl(admin.profileImage);
+        } catch (err) {
+            console.error("Error generating signed URL for admin:", err);
+        }
+    }
+
+    return res.status(200).json(new ApiResponse(200, { 
+        ...admin.toObject(), 
+        profileImageUrl 
+    }, "Admin profile updated successfully"));
 });
 
 // ---------------- Delete Admin ----------------
@@ -252,13 +338,43 @@ const deleteAdmin = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, {}, "Admin deleted successfully"));
 });
 //---------------- Get All Teachers ----------------
+// const getAllTeachers = asyncHandler(async (req, res) => {
+//     if (req.userRole !== 'admin') {
+//         throw new ApiError(403, "Forbidden: Only admins can access all teachers");
+//     }
+//     const teachers = await Teacher.find().select("-password -teacherRefreshToken");
+//     return res.status(200).json(new ApiResponse(200, teachers, "All teachers fetched successfully"));
+// });
 const getAllTeachers = asyncHandler(async (req, res) => {
     if (req.userRole !== 'admin') {
         throw new ApiError(403, "Forbidden: Only admins can access all teachers");
     }
+
+    // Fetch all teachers without password and refresh token
     const teachers = await Teacher.find().select("-password -teacherRefreshToken");
-    return res.status(200).json(new ApiResponse(200, teachers, "All teachers fetched successfully"));
+
+    // Map through teachers to generate signed URLs if profileImage exists
+    const teachersWithUrls = await Promise.all(
+        teachers.map(async (teacher) => {
+            let profileImageUrl = null;
+            if (teacher.profileImage) {
+                try {
+                    profileImageUrl = await S3UploadHelper.getSignedUrl(teacher.profileImage);
+                } catch (err) {
+                    console.error(`Error generating signed URL for teacher ${teacher._id}:`, err);
+                }
+            }
+
+            return {
+                ...teacher.toObject(),
+                profileImageUrl: profileImageUrl || null,
+            };
+        })
+    );
+
+    return res.status(200).json(new ApiResponse(200, teachersWithUrls, "All teachers fetched successfully"));
 });
+
 // ---------------- Delete Teacher ----------------
 const deleteTeacher = asyncHandler(async (req, res) => {
     const { id } = req.params;

@@ -9,14 +9,78 @@ import { storeAccessToken, storeLoginCookies } from "../../shared/helpers/cookie
 import crypto from "crypto";
 
 // --- Register Student ---
+// const registerStudent = asyncHandler(async (req, res) => {
+//   const { name, email, password, phoneNumber, address } = req.body;
+//  if (!email) throw new ApiError(400, "Email is required");
+//   const existingStudent = await Student.findOne({ email });
+//   if (existingStudent) throw new ApiError(400, "Student already exists");
+
+//   let profileImageKey = null;
+//   let signedUrl = null;
+// console.log("Multer file:", req.file);
+//   if (req.file) {
+//     try {
+//       const uploadResult = await S3UploadHelper.uploadFile(req.file, "student-profiles");
+//       if (uploadResult?.key) {
+//         profileImageKey = uploadResult.key;
+//         signedUrl = await S3UploadHelper.getSignedUrl(uploadResult.key);
+//       }
+//     } catch (error) {
+//       console.error("S3 Upload Error:", error);
+//       throw new ApiError(500, "Profile image upload failed");
+//     }
+//   }
+
+//   const student = await Student.create({
+//     name,
+//     email,
+//     password,
+//     phoneNumber,
+//     address,
+//     ...(profileImageKey && { profileImage: profileImageKey }),
+//   });
+
+//   if (!student) throw new ApiError(400, "Student not created");
+
+//   // Generate email verification token
+//   const { hashedToken, tokenExpiry } = student.generateTemporaryToken();
+//   student.studentVerificationToken = hashedToken;
+//   student.studentVerificationTokenExpiry = tokenExpiry;
+//   await student.save();
+
+//   const verificationLink = `${process.env.BASE_URL}/api/v1/auth/verify/${hashedToken}`;
+//   await mailTransporter.sendMail({
+//     from: process.env.MAILTRAP_SENDEREMAIL,
+//     to: email,
+//     subject: "Verify your email",
+//     html: userVerificationMailBody(name, verificationLink),
+//   });
+
+//   const response = {
+//     studentId: student._id,
+//     studentName: student.name,
+//     studentEmail: student.email,
+//     studentPhoneNumber: student.phoneNumber,
+//     studentAddress: student.address,
+//     ...(signedUrl && { studentProfileImageUrl: signedUrl }),
+//   };
+
+//   return res.status(201).json(new ApiResponse(201, response, "Student registered successfully"));
+// });
+// =================== Register Student (updated) ===================
 const registerStudent = asyncHandler(async (req, res) => {
   const { name, email, password, phoneNumber, address } = req.body;
- if (!email) throw new ApiError(400, "Email is required");
+
+  if (!email) throw new ApiError(400, "Email is required");
+
   const existingStudent = await Student.findOne({ email });
   if (existingStudent) throw new ApiError(400, "Student already exists");
 
   let profileImageKey = null;
   let signedUrl = null;
+
+  // log for debugging
+  console.log("Multer file:", req.file);
 
   if (req.file) {
     try {
@@ -42,12 +106,13 @@ const registerStudent = asyncHandler(async (req, res) => {
 
   if (!student) throw new ApiError(400, "Student not created");
 
-  // Generate email verification token
+  // Generate email verification token and save
   const { hashedToken, tokenExpiry } = student.generateTemporaryToken();
   student.studentVerificationToken = hashedToken;
   student.studentVerificationTokenExpiry = tokenExpiry;
   await student.save();
 
+  // send verification mail (non-blocking errors will still throw if mail fails)
   const verificationLink = `${process.env.BASE_URL}/api/v1/auth/verify/${hashedToken}`;
   await mailTransporter.sendMail({
     from: process.env.MAILTRAP_SENDEREMAIL,
@@ -56,17 +121,22 @@ const registerStudent = asyncHandler(async (req, res) => {
     html: userVerificationMailBody(name, verificationLink),
   });
 
-  const response = {
-    studentId: student._id,
-    studentName: student.name,
-    studentEmail: student.email,
-    studentPhoneNumber: student.phoneNumber,
-    studentAddress: student.address,
-    ...(signedUrl && { studentProfileImageUrl: signedUrl }),
-  };
+  // Build response object consistent with getAllTeachers style
+  const studentObj = student.toObject();
 
-  return res.status(201).json(new ApiResponse(201, response, "Student created successfully"));
+  // remove sensitive fields
+  delete studentObj.password;
+  delete studentObj.studentRefreshToken;
+  // add signed url for profile image if present
+  if (student.profileImage) {
+    studentObj.profileImageUrl = await S3UploadHelper.getSignedUrl(student.profileImage).catch(() => null);
+  } else {
+    studentObj.profileImageUrl = signedUrl || null;
+  }
+
+  return res.status(201).json(new ApiResponse(201, studentObj, "Student registered successfully"));
 });
+
 
 // --- Login Student ---
 const loginStudent = asyncHandler(async (req, res) => {

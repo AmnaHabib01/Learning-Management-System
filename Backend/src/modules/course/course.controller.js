@@ -95,3 +95,12 @@ export const deleteCourse = asyncHandler(async (req, res) => {
 
   return res.status(200).json(new ApiResponse(200, {}, "Course deleted successfully"));
 });
+// GET /course/total
+export const totalCourses = asyncHandler(async (req, res) => {
+  const total = await Course.countDocuments();
+  res.status(200).json({
+    success: true,
+    total,
+    message: "Total courses fetched successfully",
+  });
+});

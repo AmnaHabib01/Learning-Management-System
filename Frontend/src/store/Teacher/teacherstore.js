@@ -5,6 +5,7 @@ const useTeacherStore = create((set, get) => ({
     teachers: [],
     loading: false,
     error: null,
+    totalTeachers: 0,
     setLoading: (loading) => set({ loading }),
     setError: (error) => set({ error }),
 
@@ -12,7 +13,7 @@ const useTeacherStore = create((set, get) => ({
         set({ loading: true, error: null });
         try {
             const response = await api.get('/admin/allteachers');
-            set({ teachers: response.data.data, loading: false });
+            set({ teachers: response.data.data, loading: false });            
         } catch (err) {
             set({ 
                 error: err.response?.data?.message || "Failed to fetch teachers",
@@ -54,7 +55,7 @@ const useTeacherStore = create((set, get) => ({
     deleteTeacher: async (id) => {
         set({ loading: true, error: null });
         try {
-            const response = await api.delete(`/admin/teachers/${id}`);
+            const response = await api.delete(`/admin/teacher/${id}`);
             get().fetchTeachers();
             return response.data.message;
         } catch (err) {
@@ -63,6 +64,15 @@ const useTeacherStore = create((set, get) => ({
             throw new Error(errorMessage);
         }
     },
-}));
+     fetchTotalTeachers: async () => {
+        try {
+          set({ loading: true });
+          const res = await api.get("/teacher/total/count"); // endpoint you created
+          set({ totalTeachers: res.data.data.total, loading: false });
+        } catch (err) {
+          set({ error: err.response?.data?.message, loading: false });
+        }
+      },
+    }));
 
 export default useTeacherStore;
