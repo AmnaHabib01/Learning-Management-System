@@ -7,6 +7,7 @@ import {
   getCourseById,
   updateCourse,
   deleteCourse,
+  totalCourses
 } from "./course.controller.js";
 
 const courseRouter = Router();
@@ -18,6 +19,8 @@ courseRouter.post("/create", validate(createCourseSchema), createCourse);
 
 // Get All Courses
 courseRouter.get("/all", getAllCourses);
+courseRouter.get("/total", totalCourses);
+
 
 // Get Single Course
 courseRouter.get("/:id", getCourseById);
@@ -27,5 +30,4 @@ courseRouter.put("/update/:id", validate(updateCourseSchema), updateCourse);
 
 // Delete Course
 courseRouter.delete("/delete/:id", deleteCourse);
-
 export default courseRouter;

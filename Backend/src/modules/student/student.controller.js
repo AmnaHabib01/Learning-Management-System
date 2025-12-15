@@ -27,66 +27,67 @@ export const getStudentProfile = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, studentObj, "Student profile retrieved successfully"));
 });
 
-// =================== Update Student ===================
-export const updateStudent = asyncHandler(async (req, res) => {
+
+// =================== Get All Students ===================
+export const getAllStudents = asyncHandler(async (req, res) => {
+  const students = await Student.find().lean(); // Use lean() for plain JS objects
+
+  // Add signed URLs for each student
+  const studentsWithUrls = await Promise.all(
+    students.map(async (student) => {
+      if (student.profileImage) {
+        student.profileImageUrl = await S3UploadHelper.getSignedUrl(student.profileImage).catch(() => null);
+      }
+      return student;
+    })
+  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, studentsWithUrls, "All students retrieved successfully"));
+});
+
+// =================== Update Student (including Profile Image) ===================
+export const updateStudentProfile = asyncHandler(async (req, res) => {
   const { studentId } = req.params;
 
+  // Validate input data
   const parsedData = updateStudentSchema.safeParse(req.body);
   if (!parsedData.success) {
     const errors = parsedData.error.errors.map((e) => e.message);
     throw new ApiError(400, "Validation failed", errors);
   }
 
-  const allowedFields = ["name", "email", "phoneNumber", "address"];
+  const allowedFields = ["name", "email", "phoneNumber", "address", "rollNo", "className", "section"];
   const updates = {};
+
   allowedFields.forEach((field) => {
     if (parsedData.data[field] !== undefined) updates[field] = parsedData.data[field];
   });
 
+  const student = await Student.findById(studentId);
+  if (!student) throw new ApiError(404, "Student not found");
+
+  // Handle profile image update if file is provided
   if (req.file) {
-    const oldStudent = await Student.findById(studentId);
-    if (!oldStudent) throw new ApiError(404, "Student not found");
-
-    if (oldStudent.profileImage) {
-      await S3UploadHelper.deleteFile(oldStudent.profileImage).catch(() => {});
+    if (student.profileImage) {
+      await S3UploadHelper.deleteFile(student.profileImage).catch(() => {});
     }
-
     const uploadResult = await S3UploadHelper.uploadFile(req.file, "student-profiles");
     if (uploadResult?.key) updates.profileImage = uploadResult.key;
   }
 
-  const student = await Student.findByIdAndUpdate(studentId, updates, { new: true });
-  if (!student) throw new ApiError(404, "Student not found");
+  // Update student
+  Object.assign(student, updates);
+  await student.save();
 
+  // Add signed URL
   const studentObj = student.toObject();
   if (studentObj.profileImage) {
     studentObj.profileImageUrl = await S3UploadHelper.getSignedUrl(studentObj.profileImage).catch(() => null);
   }
 
   return res.status(200).json(new ApiResponse(200, studentObj, "Student updated successfully"));
-});
-
-// =================== Update Profile Image ===================
-export const updateStudentProfileImage = asyncHandler(async (req, res) => {
-  const { studentId } = req.params;
-  if (!req.file) throw new ApiError(400, "Profile image file is required");
-
-  const student = await Student.findById(studentId);
-  if (!student) throw new ApiError(404, "Student not found");
-
-  if (student.profileImage) {
-    await S3UploadHelper.deleteFile(student.profileImage).catch(() => {});
-  }
-
-  const uploadResult = await S3UploadHelper.uploadFile(req.file, "student-profiles");
-  student.profileImage = uploadResult.key;
-  await student.save();
-
-  const profileImageUrl = await S3UploadHelper.getSignedUrl(uploadResult.key);
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, { profileImageUrl }, "Profile image updated successfully"));
 });
 
 // =================== Delete Profile Image ===================
@@ -136,4 +137,36 @@ export const addAssignmentToStudent = asyncHandler(async (req, res) => {
   await student.save();
 
   return res.status(200).json(new ApiResponse(200, student.assignments, "Assignment added to student successfully"));
+});
+//delete
+export const deleteStudent = asyncHandler(async (req, res) => {
+  const { studentId } = req.params;
+
+  // Find the student
+  const student = await Student.findById(studentId);
+  if (!student) throw new ApiError(404, "Student not found");
+
+  // Delete profile image from S3 if exists
+  if (student.profileImage) {
+    await S3UploadHelper.deleteFile(student.profileImage).catch(() => {});
+  }
+
+  // Optional: Remove student from quizzes/assignments if needed
+  // await Quiz.updateMany({ students: studentId }, { $pull: { students: studentId } });
+  // await Assignment.updateMany({ students: studentId }, { $pull: { students: studentId } });
+
+  // Delete the student
+  await Student.findByIdAndDelete(studentId);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, null, "Student deleted successfully"));
+});
+//total students
+// =================== Get Total Number of Students ===================
+export const getTotalStudents = asyncHandler(async (req, res) => {
+  const totalStudents = await Student.countDocuments(); // <-- do not use findById
+  return res
+    .status(200)
+    .json(new ApiResponse(200, { total: totalStudents }, "Total number of students retrieved successfully"));
 });

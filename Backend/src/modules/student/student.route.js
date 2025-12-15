@@ -4,14 +4,24 @@ import { upload } from "../../core/middleware/multer.js";
 
 import {
   getStudentProfile,
-  updateStudent,
-  updateStudentProfileImage,
+  getAllStudents,
+  updateStudentProfile,
   deleteStudentProfileImage,
+  deleteStudent,
+  getTotalStudents,
 } from "../../modules/student/student.controller.js";
 
-const studentrouter = express.Router();
-studentrouter.get("/:studentId", getStudentProfile);
-studentrouter.put("/update/:studentId", upload.single("studentProfileImage"), updateStudent);
-studentrouter.put("/:studentId/profile-image", upload.single("studentProfileImage"), updateStudentProfileImage);
-studentrouter.delete("/:studentId/profile-image", deleteStudentProfileImage);
-export default studentrouter;
+const studentRouter = express.Router();
+studentRouter.get("/all", getAllStudents);
+studentRouter.get("/sumofall", getTotalStudents);
+studentRouter.get("/studentprofile/:studentId", getStudentProfile);
+
+// =================== Update Student (info + optional profile image) ===================
+studentRouter.put(
+  "/update/:studentId",
+  upload.single("studentProfileImage"),
+  updateStudentProfile
+);
+studentRouter.delete("/:studentId/profile-image", deleteStudentProfileImage);
+studentRouter.delete("/delete/:studentId", deleteStudent);
+export default studentRouter;

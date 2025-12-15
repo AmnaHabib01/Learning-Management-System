@@ -5,7 +5,7 @@ import {
   registerTeacherSchema,
   loginTeacherSchema,
   resetTeacherPasswordSchema,
-  updateTeacherSchema,
+  updateTeacherSchema
 } from "../../shared/validators/teacher.validator.js"; // teacher validators
 import {
   registerTeacher,
@@ -16,7 +16,9 @@ import {
   forgotTeacherPasswordMail,
   resetTeacherPassword,
   getTeacherById,
-  updateTeacher} from "./teacher.controller.js";
+  updateTeacher,
+  getTotalTeachers
+} from "./teacher.controller.js";
 import { isLoggedIn } from "../../core/middleware/isLoggedIn.js";
 import {authorizeRoles} from "../../core/middleware/authorizeRoles.js"
 
@@ -60,10 +62,12 @@ teacherRouter.get("/:id", isLoggedIn, getTeacherById);
 teacherRouter.put(
   "/:id",
   isLoggedIn,
+  authorizeRoles("admin"),
   upload.single("profileImage"),
   validate(updateTeacherSchema),
   updateTeacher
 );
+teacherRouter.get("/total/count", isLoggedIn, authorizeRoles("admin"), getTotalTeachers);
 
 
 export default teacherRouter;

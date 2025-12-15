@@ -8,6 +8,7 @@ import {
   updateAdminSchema,
   
 } from "../../shared/validators/admin.validator.js"; // admin validators
+import adminTokenInterceptor from "../../core/middleware/adminTokenInterceptor.js";
 import {
   registerAdmin,
   logInAdmin,
@@ -20,11 +21,12 @@ import {
   updateAdminProfile,
   getAllTeachers,
   deleteAdmin,
+  deleteTeacher,
 } from "./admin.controller.js";
 import { isLoggedIn } from "../../core/middleware/isLoggedIn.js";
 
 const adminRouter = express.Router();
-
+adminRouter.use(adminTokenInterceptor);
 // ✅ Register Admin (with optional profile image)
 adminRouter.post(
   "/register-admin",
@@ -68,8 +70,9 @@ adminRouter.put(
 );
 
 // 🗑 Delete Admin Profile
-adminRouter.delete("/profile", isLoggedIn, deleteAdmin);
+adminRouter.delete("/delete/profile", isLoggedIn, deleteAdmin);
 adminRouter.get("/allteachers", isLoggedIn, getAllTeachers);
+adminRouter.delete("/teacher/:id", isLoggedIn, deleteTeacher);
 adminRouter.get("/access-token", isLoggedIn, getAdminAccessToken);
 
 export default adminRouter;

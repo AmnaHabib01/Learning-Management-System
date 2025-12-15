@@ -3,6 +3,12 @@ import { Outlet } from "react-router-dom";
 import Home from "../admin/Home"
 import Students from "../admin/Students";
 import Teacher from "./Teacher";
+import Courses from "./Courses";
+import AnalyticsDashboard from "./analytics"
+import NotificationPage from "./Notification";
+import AdminLogoutPage from "./logout";
+import SettingsPage from "./Settings"
+import NotificationDropdown from "../../Components/ui/NotificationDropdown";
 import ProfileSection from "../../Components/ui/ProfileSection"; // adjust path as needed
 import {
     FiUser,
@@ -28,13 +34,13 @@ const renderContent = (activeItem) => {
         case "Courses":
             return <Courses />;
         case "Analytics":
-            return <Analytics />;
+            return <AnalyticsDashboard />;
         case "Notifications":
-            return <Notifications />;
+            return <NotificationPage />;
         case "Settings":
-            return <Settings />;
+            return <SettingsPage />;
         case "Logout":
-            return <div>Logging out...</div>;
+            return <AdminLogoutPage />;
         default:
             return <Home />;
     }
@@ -55,6 +61,7 @@ export default function AdminDashboard() {
     const [activeItem, setActiveItem] = useState("Home");
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
+    const [showNotifications, setShowNotifications] = React.useState(false);
 
     const filteredMainItems = mainItems.filter((item) =>
         item.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -120,9 +127,9 @@ export default function AdminDashboard() {
                             />
                             <FiSearch className="absolute left-2 top-1/2 -translate-y-1/2 text-blue-900 transition-colors group-focus:text-blue-900" />
                         </div>
-                        <button className="fixed bottom-6 right-6 bg-linear-to-r from-blue-900 to-purple-600 text-white px-6 py-4 rounded-full shadow-lg text-lg font-semibold animate-pulse hover:scale-110 transition-transform duration-300 ring-4 ring-blue-300 ring-opacity-30">
+                        {/* <button className="fixed bottom-6 right-6 bg-linear-to-r from-blue-900 to-purple-600 text-white px-6 py-4 rounded-full shadow-lg text-lg font-semibold animate-pulse hover:scale-110 transition-transform duration-300 ring-4 ring-blue-300 ring-opacity-30">
                             Chat AI 💬
-                        </button>
+                        </button> */}
                     </div>
 
                     <div className="flex items-center gap-4">
@@ -130,6 +137,19 @@ export default function AdminDashboard() {
                             <FiBell className="text-gray-700 text-xl" />
                             <span className="absolute top-0 right-0 h-2 w-2 bg-yellow-400 rounded-full"></span>
                         </button>
+                        <button
+                            className="relative p-2 rounded-full hover:bg-gray-400 hover:text-yellow-400 transition-colors"
+                            onClick={() => setShowNotifications(!showNotifications)}
+                        >
+                            <FiBell className="text-gray-700 text-xl" />
+                            <span className="absolute top-0 right-0 h-2 w-2 bg-yellow-400 rounded-full"></span>
+                        </button>
+
+                        {showNotifications && (
+                            <div className="absolute top-13 right-4 z-50">
+                                <NotificationDropdown onClose={() => setShowNotifications(false)} />
+                            </div>
+                        )}
                         <button
                             onClick={() => setShowProfile(!showProfile)}
                             className="p-2 rounded-full hover:bg-yellow-400 hover:text-blue-900 transition-colors relative"
@@ -141,17 +161,9 @@ export default function AdminDashboard() {
                 </div>
                 {showProfile && (
                     <div className="absolute top-16 right-4 z-50">
-                        <ProfileSection
-                            user={{
-                                name: "John Doe",
-                                email: "john.doe@example.com",
-                                role: "Admin",
-                                profileImage: "", // leave empty to use default
-                            }}
-                        />
+                        <ProfileSection onClose={() => setShowProfile(false)} />
                     </div>
                 )}
-
                 {/* INNER CONTENT */}
                 <div className="flex-1 bg-gray-100 overflow-auto ">
                     <div className="bg-white rounded-md shadow-lg  min-h-full">
